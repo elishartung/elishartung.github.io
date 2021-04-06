@@ -9,7 +9,7 @@ output:
 pagetitle: Eli Hartung - Utah Valley University
 ---
 
-## [HOME](https://elishartung.github.io/) | [Research and Experience]() | [About Me]() 
+## [HOME](https://elishartung.github.io/) | [Research and Experience](file:///Users/elihartung/Desktop/elishartung.github.io/research/index.html) | [About Me](file:///Users/elihartung/Desktop/elishartung.github.io/about_me/index.html) 
 
 ___
 # Contact Info:
