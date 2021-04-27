@@ -6,6 +6,7 @@ library(purrr)
 library(readxl)
 library(dplyr)
 library(vegan)
+library(modelr)
 
 ### PLOT STUFF
 beehive<-read_excel("../../microsite/beehive_clean.xlsx")
@@ -56,14 +57,12 @@ Rough <- ggplot(full_plots, aes(x = roughness, colour= population)) +
   facet_wrap(~population)
 ggsave("Rough.jpg")
 
-
-
-saveRDS(full, "./full.RDS")
+full
 
 
 ### PLANT STUFF
-emergence1 <- full %>% 
-  select(population,plant_number,ends_with("_e")) %>% 
+emergence1 <-full 
+  select(emergence1,population,plant_number,ends_with("_e")) %>%
   select(!contains("plant_e")) %>% 
   select(!contains("rivulet")) %>% 
   select(!contains("other")) %>% 
@@ -74,7 +73,7 @@ emergence1[is.na(emergence1)] <- 0
 emergence_matrix1 <- emergence1 %>% 
   select(ends_with("_e"))
 
-row.names(emergence1) <- emergence1$plant_id
+emergence_matrix1[is.na(emergence_matrix1)] <- 0
 
 
 NMDS <- metaMDS(emergence_matrix1,
@@ -92,43 +91,17 @@ ggplot(emergence1, aes(x=MDS1,y=MDS2,color=population)) +
   geom_point(size=4,alpha=.2) +
   stat_ellipse()
 
-perm <- adonis(formula = emergence_matrix1 ~ emergence1$population)
-perm
+emergence11 <- emergence1 %>% mutate_all(as.logical)
+emergence_matrix2 <-emergence_matrix1 %>% mutate_all(as.logical)
+emergence_matrix2$cow_e <- emergence_matrix2$plant_e <- emergence_matrix2$other_e <- emergence_matrix2$rivulet_e <- NULL
 
-crypto_e_mod <- aov(data=emergence1,
-                    formula = crypto_e ~ population)
-summary(crypto_e_mod)
-TukeyHSD(crypto_e_mod) %>% plot()
-#####
+perm <- glm(formula= emergence11$plant_number~ crypto_e + lg_gr_e + sm_gr_e + gyp_e + bare_e, 
+            family = binomial, data= emergence_matrix2, maxit= 100)
+add_predictions(emergence_matrix2, perm, type= "response")
 
-
-sm_gr_e_mod <- aov(data=emergence1,
-                    formula = sm_gr_e ~ population)
-summary(sm_gr_e_mod)
-TukeyHSD(sm_gr_e_mod) %>% plot()
-
-
-lg_gr_e_mod <- aov(data=emergence1,
-                    formula = lg_gr_e ~ population)
-summary(lg_gr_e_mod)
-TukeyHSD(lg_gr_e_mod) %>% plot()
-
-
-gyp_e_mod <- aov(data=emergence1,
-                    formula = gyp_e ~ population)
-summary(gyp_e_mod)
-TukeyHSD(gyp_e_mod) %>% plot()
-
-
-bare_e_mod <- aov(data=emergence1,
-                    formula = bare_e ~ population)
-summary(bare_e_mod)
-TukeyHSD(bare_e_mod) %>% plot()
 
 ####COVER 
-cover1 <- full %>% 
-  select(population,plant_number,ends_with("_c")) %>% 
-  mutate(plant_id = paste0(population,"_",plant_number)) 
+cover1 <- full_plots %>%select(population,plot_number,ends_with("_c"))
 
 cover1[is.na(cover1)] <- 0
 
@@ -158,6 +131,14 @@ summary(crypto_c_mod)
 TukeyHSD(crypto_c_mod) %>% plot()
 
 
+add_predictions(full,crypto_c_mod) %>%
+  ggplot(aes(x=crypto_c, fill=population)) +
+  geom_bar() + geom_bar(aes(x= sm_gr_c, y=pred),stat = "identity", color= "Black") +
+  facet_wrap(~population)
+
+
+
+
 sm_gr_c_mod <- aov(data=cover1,
                    formula = sm_gr_c ~ population)
 summary(sm_gr_c_mod)
@@ -182,6 +163,80 @@ bare_c_mod <- aov(data=cover1,
                  formula = bare_c ~ population)
 summary(bare_c_mod)
 TukeyHSD(bare_c_mod) %>% plot()
+
+### emergence stuff i might need
+crypto_e_mod <- aov(data=emergence1,
+                    formula = population ~ crypto_e)
+summary(crypto_e_mod)
+TukeyHSD(crypto_e_mod) %>% plot()
+
+sm_gr_e_mod <- aov(data=emergence1,
+                   formula = sm_gr_e ~ population)
+summary(sm_gr_e_mod)
+TukeyHSD(sm_gr_e_mod) %>% plot()
+
+
+lg_gr_e_mod <- aov(data=emergence1,
+                   formula = lg_gr_e ~ population)
+summary(lg_gr_e_mod)
+TukeyHSD(lg_gr_e_mod) %>% plot()
+
+
+gyp_e_mod <- aov(data=emergence1,
+                 formula = gyp_e ~ population)
+summary(gyp_e_mod)
+TukeyHSD(gyp_e_mod) %>% plot()
+
+
+bare_e_mod <- aov(data=emergence1,
+                  formula = bare_e ~ population)
+summary(bare_e_mod)
+TukeyHSD(bare_e_mod) %>% plot()
+
+
+
+#### removed markdown stuff
+Significance of small gravel as a emergence substrate as a function of population.
+```{r, echo=FALSE}
+
+
+sm_gr_e_mod <- aov(data=emergence1,
+                   formula = sm_gr_e ~ population)
+summary(sm_gr_e_mod)
+
+
+
+
+```
+
+Significance of large gravel as a emergence substrate as a function of population.
+```{r, echo=FALSE}
+lg_gr_e_mod <- aov(data=emergence1,
+                   formula = lg_gr_e ~ population)
+summary(lg_gr_e_mod)
+
+
+```
+
+Significance of exposed gypsum as a emergence substrate as a function of population.
+```{r, echo=FALSE}
+gyp_e_mod <- aov(data=emergence1,
+                 formula = gyp_e ~ population)
+summary(gyp_e_mod)
+
+
+
+```
+
+Significance of bare soil as a emergence substrate as a function of population.
+```{r, echo=FALSE}
+
+bare_e_mod <- aov(data=emergence1,
+                  formula = bare_e ~ population)
+summary(bare_e_mod)
+```
+
+As with cover materials, each emergence substrate above differed significantly between populations.  
 
 
 
