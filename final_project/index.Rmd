@@ -1,6 +1,7 @@
 ---
 title: "Final Project/Research"
-output: html_document
+author: Eli Hartung
+output: html_document 
 ---
 
 ```{r, include= FALSE}
@@ -38,36 +39,36 @@ ggplot(full_plots, aes(x = disturbance, fill= population)) +
   geom_bar() +
   theme_minimal() +
   labs(x= "Disturbance", y= "Number of Disturbed Plots") +
-  theme(axis.text.x = element_text(angle=90)) +
+  theme(axis.text.x = element_text(angle=60)) +
   theme(axis.text.x = element_text(size= 6)) +
   facet_wrap(~population)
 ```
 
-   The disturbance regimes of each population and the presence of disturbance in each of these sample plots varies as well.  
+   The disturbance regimes of each population and the presence of disturbance in each of these sample plots varies as well.  These differences in disturbance likely play a role in the cover characteristics of these plots.  
   
 ```{r, echo=FALSE}
  ggplot(full_plots, aes(x = topography_1, fill= population)) + 
   geom_bar() +
   theme_minimal() +
   labs(x= "Topography 1", y= "Number of Plots") +
-  theme(axis.text.x = element_text(angle=90)) +
+  theme(axis.text.x = element_text(angle=60)) +
   theme(axis.text.x = element_text(size= 6)) +
   facet_wrap(~population)
 ```
  
-   In this plot, flat refers to only a few degrees of slope along the plot, gradual is anywhere between about 10º and 45º, and steep refers to plots on slopes greater than 45º. 
+   In this plot, flat refers to only a few degrees of slope along the plot, gradual is anywhere between about 10º and 45º, and steep refers to plots on slopes greater than 45º.  The plants we found were most often found in gradually sloping plots.  
   
 ```{r, echo=FALSE}
 ggplot(full_plots, aes(x = topography_2, fill= population)) + 
   geom_bar() +
   theme_minimal() +
   labs(x= "Topography 2", y= "Number of Plots") +
-  theme(axis.text.x = element_text(angle=90)) +
+  theme(axis.text.x = element_text(angle=60)) +
   theme(axis.text.x = element_text(size= 5 )) +
   facet_wrap(~population)
 ```
  
-   In this plot, frontslopes refer to either north or east facing slopes while backslopes refer to either south or west facing slopes. 
+   In this plot, frontslopes refer to either north or east facing slopes while backslopes refer to either south or west facing slopes.  Plants were most often found in backloping plots at beehive while plants were most often found on knolltops and frontslopes at redbluffs and whitedome, respectively.  
   
 ```{r, echo=FALSE}
 ggplot(full_plots, aes(x = roughness, fill= population)) + 
@@ -79,7 +80,7 @@ ggplot(full_plots, aes(x = roughness, fill= population)) +
   facet_wrap(~population)
 ```
 
-  The roughness values represent vertical "something" within the plot.  1 is 1cm or less difference.  2 is between 1cm and 3cm. 3 is 3cm or greater.  
+  The roughness values represent vertical "something" within the plot.  1 is 1cm or less difference.  2 is between 1cm and 3cm. 3 is 3cm or greater.  The plots we found were most often gradually sloping with varying levels of steeply sloping and flat plots across populations.  
  
 
   The cover of these plots varied and were different between populations.
@@ -196,11 +197,11 @@ TukeyHSD(bare_c_mod) %>% plot()
 ```
 
 
-### Each of these cover materials was significantly different among populations.  
+####  The percent cover of each cover type was significanyly different across populations and shows diffences in habitable plot composition between sites.  
 
 ___
 
-### At the emergence point level, plants recruited into and grew from different materials within and between populations.
+#### At the emergence point level, plants recruited into and grew from different materials within and between populations.
 
 ```{r, echo=FALSE, warning=FALSE, include=FALSE}
 emergence1 <-full %>% 
@@ -237,18 +238,23 @@ ggplot(emergence1, aes(x=MDS1,y=MDS2,color=population)) +
   stat_ellipse()
 
 ```
+ 
+ Using the models shown below, we can see the predicted values for emergence substrates across populations.  
+```{r, }
+long <- emergence1 %>% 
+  pivot_longer(ends_with("_e"),names_to="Substrate",values_to="Emergence") 
+mod_logistic2 <- glm(data=long,
+                     formula = Emergence ~ Substrate + population,
+                     family="binomial")
 
+ 
 
-  Significance of cryptobiotic soil as a emergence substrate as a function of population.
-```{r, echo=FALSE}
-emergence11 <- emergence1 %>% mutate_all(as.logical)
-emergence_matrix2 <-emergence_matrix1 %>% mutate_all(as.logical)
-emergence_matrix2$cow_e <- emergence_matrix2$plant_e <- emergence_matrix2$other_e <- emergence_matrix2$rivulet_e <- NULL
-
-perm <- glm(formula= emergence11$plant_number~ crypto_e + lg_gr_e + sm_gr_e + gyp_e + bare_e, 
-            family = binomial, data= emergence_matrix2, maxit= 100)
-add_predictions(emergence_matrix2, perm, type= "response")
+add_predictions(long,mod_logistic2,type="response") %>% 
+  ggplot(aes(x=Substrate,y=pred)) + geom_boxplot() + facet_wrap(~population) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle=60,hjust=1))  + 
+  labs(x= "Substrate Type", y= "Predicted Probability of Emergence")
 
 ```
-
+bare_e refers to emergence from bare soil, cow_e refers to emergence from a cow track, crypto_e refers to emergence from cryptopbiotic crust, gyp_e refers to emergence from exposed gypsum, lg_gr_e refers to emergence from large gravel, and sm_gr_e refers to emergence from small gravel.  Even though the populations for the Dwarf Bear Poppy vary widely at the plot level, there are many similarities among them for plant emergence.  Across all three populations, there seems to be a much higher probability for emergence from cryptobiotic crust and gravel while emergence from bare soil, cow tracks, and gypsum seem to be much less likely. 
  
